@@ -392,8 +392,10 @@ window.confirmClose = () => {
   m.closed = true;
   let nextCarried = { Tlaxcala: 0, Tepoz: 0 };
   if (state.carryOver && s.diff !== 0) {
-    if (s.diff > 0) nextCarried = { Tlaxcala: Math.abs(s.diff), Tepoz: 0 };
-    else nextCarried = { Tlaxcala: 0, Tepoz: Math.abs(s.diff) };
+    // Si Tepoz tuvo más noches en Tlaxcala (diff > 0), el arrastre le da noches gratis a Tepoz en Tlaxcala
+    // O sea suma a la casa CONTRARIA (la que tuvo menos)
+    if (s.diff > 0) nextCarried = { Tlaxcala: 0, Tepoz: Math.abs(s.diff) };
+    else nextCarried = { Tlaxcala: Math.abs(s.diff), Tepoz: 0 };
   }
   const isLast = state.activeIdx === state.months.length - 1;
   if (isLast) {
