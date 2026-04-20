@@ -414,7 +414,9 @@ window.confirmClose = () => {
     state.months.push(initMonth(y, mo, nextCarried));
     state.activeIdx = state.months.length - 1;
   } else {
+    // Always update next month's carried, whether it exists or not
     state.months[state.activeIdx + 1].carried = nextCarried;
+    state.activeIdx = state.activeIdx + 1;
   }
   state.showClose = false;
   save(); render();
