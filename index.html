@@ -11,20 +11,16 @@
   <title>Casa Tlaxcala ↔ Tepoz</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #fff; color: #1a1a1a; min-height: 100dvh;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #1a1a1a; min-height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
     #root { max-width: 480px; margin: 0 auto; padding: 1.25rem 1rem 5rem; }
-    #sync-bar { position: fixed; top: 0; left: 0; right: 0; padding: 6px 16px; font-size: 12px; text-align: center; z-index: 200; transition: all 0.3s; }
+    #sync-bar { position: fixed; top: 0; left: 0; right: 0; padding: 6px 16px; font-size: 12px; text-align: center; z-index: 200; }
     #sync-bar.syncing { background: #FFF8E1; color: #B8860B; }
     #sync-bar.synced  { background: #E8F5EE; color: #2E7D32; }
     #sync-bar.error   { background: #FFEBEE; color: #C62828; }
     #sync-bar.hidden  { display: none; }
     .pt { padding-top: 2rem; }
     h1 { font-size: 17px; font-weight: 600; margin-bottom: 2px; }
-    .subtitle { font-size: 13px; color: #666; margin-bottom: 1.25rem; }
+    .sub { font-size: 13px; color: #666; margin-bottom: 1.25rem; }
     .nav { display: flex; gap: 8px; margin-bottom: 1.25rem; }
     .nav button { flex: 1; padding: 8px; font-size: 13px; border-radius: 10px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #444; }
     .nav button.active { background: #f0f0f0; font-weight: 600; border-color: #aaa; color: #111; }
@@ -35,35 +31,37 @@
     .month-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
     .month-header span { font-size: 15px; font-weight: 600; text-transform: capitalize; }
     .badge-closed { font-size: 12px; color: #27AE60; border: 1px solid #27AE60; padding: 3px 10px; border-radius: 8px; }
-    .btn-close-month { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
-    .btn-reopen { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid #C07A3A; background: transparent; cursor: pointer; color: #C07A3A; }
+    .btn-sm { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
+    .btn-reopen { border-color: #C07A3A; color: #C07A3A; }
     .carry-notice { display: flex; gap: 10px; margin-bottom: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: #EBF4FF; border: 1px solid #B3D4F5; font-size: 13px; color: #1A6DB5; }
-    .legend { display: flex; gap: 16px; margin-bottom: 0.75rem; }
+    .legend { display: flex; gap: 16px; margin-bottom: 0.75rem; flex-wrap: wrap; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
-    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 1.25rem; }
-    .cal-day-label { text-align: center; font-size: 11px; color: #aaa; padding: 2px 0; }
-    .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; border-radius: 8px; border: 1px solid #e5e5e5; background: transparent; color: #1a1a1a; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .cal-label { text-align: center; font-size: 11px; color: #aaa; padding: 2px 0; }
+    .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; border-radius: 8px; border: 1px solid #e5e5e5; background: transparent; color: #1a1a1a; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; overflow: hidden; }
     .cal-day.tlaxcala { background: #4A7C59; border-color: #4A7C59; color: #fff; font-weight: 600; }
     .cal-day.tepoz    { background: #C07A3A; border-color: #C07A3A; color: #fff; font-weight: 600; }
+    .cal-day.both     { border: none; }
     .cal-day.empty    { border: none; cursor: default; }
     .cal-day.disabled { cursor: default; }
-    .house-selector { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
-    .house-selector span { font-size: 13px; color: #666; }
+    .both-num { position: relative; z-index: 1; font-size: 13px; font-weight: 600; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,0.4); }
+    .house-sel { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .house-sel span { font-size: 13px; color: #666; }
     .house-btn { padding: 7px 16px; font-size: 13px; border-radius: 10px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
     .house-btn.tlaxcala { border-color: #4A7C59; background: #E8F5EE; color: #4A7C59; font-weight: 600; }
     .house-btn.tepoz    { border-color: #C07A3A; background: #FBF0E6; color: #C07A3A; font-weight: 600; }
     .price-row { display: flex; align-items: center; gap: 10px; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid #e5e5e5; background: #fafafa; margin-bottom: 1.25rem; }
     .price-row span { font-size: 13px; color: #666; }
     .price-row input { width: 90px; font-size: 14px; font-weight: 600; text-align: right; border: 1px solid #ddd; border-radius: 8px; padding: 4px 8px; background: #fff; color: #1a1a1a; }
-    .price-row .flex1 { flex: 1; }
+    .flex1 { flex: 1; }
     .stats-box { border-radius: 12px; border: 1px solid #e5e5e5; overflow: hidden; }
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid #e5e5e5; }
     .stat-cell { padding: 0.75rem 0.5rem; text-align: center; border-right: 1px solid #e5e5e5; }
     .stat-cell:last-child { border-right: none; }
     .stat-label { font-size: 11px; color: #888; margin-bottom: 4px; }
     .stat-val { font-size: 22px; font-weight: 600; }
-    .stat-sub { font-size: 10px; color: #bbb; margin-top: 2px; }
+    .stat-note { font-size: 10px; color: #1A6DB5; margin-top: 2px; }
     .stats-footer { padding: 0.85rem 1.1rem; background: #fafafa; }
     .balanced { font-size: 14px; font-weight: 600; color: #27AE60; }
     .debt-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -73,14 +71,14 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
     .modal-box { background: #fff; border-radius: 20px 20px 0 0; padding: 1.5rem 1.25rem 2.5rem; width: 100%; max-width: 480px; }
     .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-    .modal-desc { font-size: 13px; color: #666; margin-bottom: 1.25rem; }
-    .carry-option { display: flex; align-items: flex-start; gap: 12px; padding: 0.85rem 1rem; border-radius: 10px; border: 1.5px solid #ddd; background: #fafafa; cursor: pointer; margin-bottom: 1.25rem; }
-    .carry-option.active { border-color: #4A7C59; background: #E8F5EE; }
-    .checkbox { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid #ccc; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
-    .checkbox.checked { background: #4A7C59; border-color: #4A7C59; color: #fff; }
+    .modal-desc { font-size: 13px; color: #666; margin-bottom: 1rem; }
+    .carry-opt { display: flex; align-items: flex-start; gap: 12px; padding: 0.75rem 1rem; border-radius: 10px; border: 1.5px solid #ddd; background: #fafafa; cursor: pointer; margin-bottom: 10px; }
+    .carry-opt.on { border-color: #4A7C59; background: #E8F5EE; }
+    .chk { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid #ccc; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .chk.on { background: #4A7C59; border-color: #4A7C59; color: #fff; }
     .carry-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
     .carry-desc { font-size: 12px; color: #777; }
-    .modal-btns { display: flex; gap: 8px; }
+    .modal-btns { display: flex; gap: 8px; margin-top: 4px; }
     .btn-cancel { flex: 1; padding: 12px; font-size: 14px; border-radius: 12px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
     .btn-confirm { flex: 2; padding: 12px; font-size: 14px; font-weight: 600; border-radius: 12px; border: none; background: #4A7C59; color: #fff; cursor: pointer; }
     .history-list { display: flex; flex-direction: column; gap: 8px; }
@@ -90,12 +88,11 @@
     .history-carry { font-size: 11px; color: #1A6DB5; margin-left: 6px; }
     .history-amount { font-size: 13px; font-weight: 600; text-align: right; }
     .empty-msg { font-size: 14px; color: #888; padding: 2rem 0; }
-    .loading { text-align: center; padding: 3rem 0; color: #888; font-size: 14px; }
   </style>
 </head>
 <body>
 <div id="sync-bar" class="hidden"></div>
-<div id="root"><div class="loading">Cargando...</div></div>
+<div id="root"><div style="text-align:center;padding:3rem 0;color:#888;font-size:14px">Cargando...</div></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -111,10 +108,12 @@ const firebaseConfig = {
   appId: "1:226680166037:web:7baa4cb2c9efd017512d9c"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
 const dataRef = ref(db, "casas");
 const now = new Date();
+
+const COLORS = { Tlaxcala: "#4A7C59", Tepoz: "#C07A3A" };
 
 function initMonth(y, m, carried) {
   return { year: y, month: m, days: {}, pricePerNight: 500, closed: false, carried: carried || { Tlaxcala: 0, Tepoz: 0 } };
@@ -122,7 +121,11 @@ function initMonth(y, m, carried) {
 
 function calcStats(month) {
   let tlax = 0, tepoz = 0;
-  Object.values(month.days || {}).forEach(h => { if (h === "Tlaxcala") tlax++; else tepoz++; });
+  Object.values(month.days || {}).forEach(h => {
+    if (h === "Tlaxcala") tlax++;
+    else if (h === "Tepoz") tepoz++;
+    else if (h === "both") { tlax++; tepoz++; }
+  });
   tlax += (month.carried?.Tlaxcala || 0);
   tepoz += (month.carried?.Tepoz || 0);
   const diff = tlax - tepoz;
@@ -134,145 +137,147 @@ function calcStats(month) {
   return { tlax, tepoz, diff, extra, cost, debtor, creditor };
 }
 
-function monthName(y, m) {
-  return new Date(y, m, 1).toLocaleString("es-MX", { month: "long", year: "numeric" });
+function rawCounts(month) {
+  let tlax = 0, tepoz = 0;
+  Object.values(month.days || {}).forEach(h => {
+    if (h === "Tlaxcala") tlax++;
+    else if (h === "Tepoz") tepoz++;
+    else if (h === "both") { tlax++; tepoz++; }
+  });
+  return { tlax, tepoz };
 }
-function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
-function firstDayOfMonth(y, m) { const d = new Date(y, m, 1).getDay(); return d === 0 ? 6 : d - 1; }
+
+function nextDayState(cur, sel) {
+  const other = sel === "Tlaxcala" ? "Tepoz" : "Tlaxcala";
+  if (!cur) return sel;
+  if (cur === sel) return null;
+  if (cur === other) return "both";
+  if (cur === "both") return other;
+  return null;
+}
+
+function mName(y, m) { return new Date(y, m, 1).toLocaleString("es-MX", { month: "long", year: "numeric" }); }
+function dim(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function fdm(y, m) { const d = new Date(y, m, 1).getDay(); return d === 0 ? 6 : d - 1; }
 
 let state = {
   months: [initMonth(now.getFullYear(), now.getMonth())],
-  activeIdx: 0,
-  view: "calendar",
-  selectedHouse: "Tlaxcala",
-  showModal: false,
-  showReopenModal: false,
-  carryOver: false,
+  activeIdx: 0, view: "calendar", sel: "Tlaxcala",
+  showClose: false, showReopen: false,
+  carry: { Tlaxcala: false, Tepoz: false },
   loaded: false
 };
 
 function showSync(type, msg) {
-  const bar = document.getElementById("sync-bar");
-  bar.className = type;
-  bar.textContent = msg;
-  if (type === "synced") setTimeout(() => { bar.className = "hidden"; }, 2000);
+  const b = document.getElementById("sync-bar");
+  b.className = type; b.textContent = msg;
+  if (type === "synced") setTimeout(() => b.className = "hidden", 2000);
 }
 
-function saveToFirebase() {
+function save() {
   showSync("syncing", "Sincronizando...");
   set(dataRef, { months: state.months })
     .then(() => showSync("synced", "Sincronizado ✓"))
     .catch(() => showSync("error", "Error al sincronizar"));
 }
 
-const timeout = setTimeout(() => {
-  if (!state.loaded) {
-    state.loaded = true;
-    render();
-  }
-}, 5000);
+const fbTO = setTimeout(() => { if (!state.loaded) { state.loaded = true; render(); } }, 5000);
 
-onValue(dataRef, (snapshot) => {
-  clearTimeout(timeout);
-  const data = snapshot.val();
-  if (data && data.months && data.months.length > 0) {
-    state.months = data.months;
+onValue(dataRef, snap => {
+  clearTimeout(fbTO);
+  const d = snap.val();
+  if (d && d.months && d.months.length > 0) {
+    state.months = d.months;
     if (state.activeIdx >= state.months.length) state.activeIdx = state.months.length - 1;
   }
-  state.loaded = true;
-  render();
-}, (error) => {
-  clearTimeout(timeout);
-  console.error("Firebase error:", error);
-  state.loaded = true;
-  render();
-});
+  state.loaded = true; render();
+}, err => { clearTimeout(fbTO); state.loaded = true; render(); });
 
 function render() {
   if (!state.loaded) return;
-  const root = document.getElementById("root");
   const m = state.months[state.activeIdx];
   const stats = calcStats(m);
-  const totalDays = daysInMonth(m.year, m.month);
-  const firstDay = firstDayOfMonth(m.year, m.month);
-  const hasCarry = m.carried && (m.carried.Tlaxcala > 0 || m.carried.Tepoz > 0);
+  const raw = rawCounts(m);
+  const cTlax = m.carried?.Tlaxcala || 0;
+  const cTepoz = m.carried?.Tepoz || 0;
+  const hasCarry = cTlax > 0 || cTepoz > 0;
+  const td = dim(m.year, m.month);
+  const fd = fdm(m.year, m.month);
 
-  root.innerHTML = `
-    <div class="pt">
-      <h1>Casa Tlaxcala ↔ Tepoz</h1>
-      <p class="subtitle">Cronograma de noches y balance mensual</p>
-      <div class="nav">
-        <button class="${state.view === "calendar" ? "active" : ""}" onclick="setView('calendar')">Calendario</button>
-        <button class="${state.view === "history" ? "active" : ""}" onclick="setView('history')">Historial</button>
-        <button class="btn-new" onclick="addMonth()">+ Mes</button>
-      </div>
-      ${state.view === "calendar" ? renderCalView(m, stats, totalDays, firstDay, hasCarry) : renderHistView()}
-      ${state.showModal ? renderCloseModal(m, stats) : ""}
-      ${state.showReopenModal ? renderReopenModal(m) : ""}
-    </div>`;
-}
-
-function renderCalView(m, stats, totalDays, firstDay, hasCarry) {
   const tabs = state.months.map((mo, i) => `
-    <button class="${i === state.activeIdx ? "active" : ""}" onclick="setActiveMonth(${i})">
+    <button class="${i === state.activeIdx ? "active" : ""}" onclick="setMo(${i})">
       ${new Date(mo.year, mo.month, 1).toLocaleString("es-MX", { month: "short", year: "2-digit" })}${mo.closed ? " ✓" : ""}
     </button>`).join("");
 
   let cells = "";
-  for (let i = 0; i < firstDay; i++) cells += `<div class="cal-day empty"></div>`;
-  for (let d = 1; d <= totalDays; d++) {
-    const house = (m.days || {})[d] || "";
-    const cls = house ? house.toLowerCase() : "";
+  for (let i = 0; i < fd; i++) cells += `<div class="cal-day empty"></div>`;
+  for (let d = 1; d <= td; d++) {
+    const h = (m.days || {})[d] || "";
     const dis = m.closed ? "disabled" : "";
-    cells += `<div class="cal-day ${cls} ${dis}" onclick="toggleDay(${d})">${d}</div>`;
+    if (h === "both") {
+      cells += `<div class="cal-day both ${dis}" onclick="toggleDay(${d})">
+        <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 40 40" preserveAspectRatio="none">
+          <polygon points="0,0 40,0 0,40" fill="${COLORS.Tlaxcala}"/>
+          <polygon points="40,0 40,40 0,40" fill="${COLORS.Tepoz}"/>
+        </svg>
+        <span class="both-num">${d}</span>
+      </div>`;
+    } else {
+      cells += `<div class="cal-day ${h ? h.toLowerCase() : ""} ${dis}" onclick="toggleDay(${d})">${d}</div>`;
+    }
   }
-
-  const hSel = m.closed ? "" : `
-    <div class="house-selector">
-      <span>Registrar en:</span>
-      <button class="house-btn ${state.selectedHouse === "Tlaxcala" ? "tlaxcala" : ""}" onclick="selectHouse('Tlaxcala')">Casa Tlaxcala</button>
-      <button class="house-btn ${state.selectedHouse === "Tepoz" ? "tepoz" : ""}" onclick="selectHouse('Tepoz')">Casa Tepoz</button>
-    </div>`;
 
   const closeBtn = m.closed
     ? `<div style="display:flex;gap:8px;align-items:center">
         <span class="badge-closed">Mes cerrado</span>
-        <button class="btn-reopen" onclick="openReopenModal()">Reabrir</button>
+        <button class="btn-sm btn-reopen" onclick="openReopen()">Reabrir</button>
        </div>`
-    : `<button class="btn-close-month" onclick="openCloseModal()">Cerrar mes</button>`;
+    : `<button class="btn-sm" onclick="openClose()">Cerrar mes</button>`;
 
   const carryNotice = hasCarry ? `
-    <div class="carry-notice">
-      <span>↩</span>
-      <span>Noches arrastradas: ${m.carried.Tlaxcala > 0 ? `<strong>Tlaxcala +${m.carried.Tlaxcala}</strong>` : ""}${m.carried.Tepoz > 0 ? `<strong>Tepoz +${m.carried.Tepoz}</strong>` : ""}</span>
+    <div class="carry-notice"><span>↩</span>
+      <span>Noches arrastradas:${cTlax > 0 ? ` <strong>Tlaxcala +${cTlax}</strong>` : ""}${cTepoz > 0 ? ` <strong>Tepoz +${cTepoz}</strong>` : ""}</span>
     </div>` : "";
+
+  const hSel = m.closed ? "" : `
+    <div class="house-sel">
+      <span>Registrar en:</span>
+      <button class="house-btn ${state.sel === "Tlaxcala" ? "tlaxcala" : ""}" onclick="setSel('Tlaxcala')">Casa Tlaxcala</button>
+      <button class="house-btn ${state.sel === "Tepoz" ? "tepoz" : ""}" onclick="setSel('Tepoz')">Casa Tepoz</button>
+    </div>`;
 
   const footer = stats.extra === 0
     ? `<p class="balanced">Balance equilibrado — sin cobro</p>`
     : `<div class="debt-row">
-        <div>
-          <div class="debt-label">El ${stats.debtor} paga al ${stats.creditor}</div>
-          <div class="debt-detail">${stats.extra} noches × $${m.pricePerNight.toLocaleString("es-MX")}</div>
-        </div>
+        <div><div class="debt-label">El ${stats.debtor} paga al ${stats.creditor}</div>
+        <div class="debt-detail">${stats.extra} noches × $${m.pricePerNight.toLocaleString("es-MX")}</div></div>
         <div class="debt-amount">$${stats.cost.toLocaleString("es-MX")} MXN</div>
        </div>`;
 
-  return `
+  const calView = `
     <div class="month-tabs">${tabs}</div>
-    <div class="month-header"><span>${monthName(m.year, m.month)}</span>${closeBtn}</div>
+    <div class="month-header"><span>${mName(m.year, m.month)}</span>${closeBtn}</div>
     ${carryNotice}
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#4A7C59"></div>Casa Tlaxcala</div>
       <div class="legend-item"><div class="legend-dot" style="background:#C07A3A"></div>Casa Tepoz</div>
+      <div class="legend-item">
+        <div class="legend-dot" style="overflow:hidden;position:relative">
+          <svg viewBox="0 0 12 12" style="width:12px;height:12px;display:block">
+            <polygon points="0,0 12,0 0,12" fill="#4A7C59"/>
+            <polygon points="12,0 12,12 0,12" fill="#C07A3A"/>
+          </svg>
+        </div>Ambas casas
+      </div>
     </div>
     <div class="cal-grid">
-      ${["L","M","X","J","V","S","D"].map(d => `<div class="cal-day-label">${d}</div>`).join("")}
+      ${["L","M","X","J","V","S","D"].map(d => `<div class="cal-label">${d}</div>`).join("")}
       ${cells}
     </div>
     ${hSel}
     <div class="price-row">
       <span class="flex1">Precio por noche extra</span><span>$</span>
-      <input type="number" value="${m.pricePerNight}" onchange="setPrice(this.value)" ${m.closed ? "disabled" : ""} />
+      <input type="number" value="${m.pricePerNight}" onchange="setPrice(this.value)" ${m.closed ? "disabled" : ""}/>
       <span>MXN</span>
     </div>
     <div class="stats-box">
@@ -280,12 +285,12 @@ function renderCalView(m, stats, totalDays, firstDay, hasCarry) {
         <div class="stat-cell">
           <div class="stat-label">Noches Tlaxcala</div>
           <div class="stat-val" style="color:#4A7C59">${stats.tlax}</div>
-          ${hasCarry && m.carried.Tlaxcala > 0 ? `<div class="stat-sub">incl. arrastre</div>` : ""}
+          ${cTlax > 0 ? `<div class="stat-note">${raw.tlax} reg. + ${cTlax} arrastre</div>` : ""}
         </div>
         <div class="stat-cell">
           <div class="stat-label">Noches Tepoz</div>
           <div class="stat-val" style="color:#C07A3A">${stats.tepoz}</div>
-          ${hasCarry && m.carried.Tepoz > 0 ? `<div class="stat-sub">incl. arrastre</div>` : ""}
+          ${cTepoz > 0 ? `<div class="stat-note">${raw.tepoz} reg. + ${cTepoz} arrastre</div>` : ""}
         </div>
         <div class="stat-cell">
           <div class="stat-label">Noches extra</div>
@@ -294,89 +299,94 @@ function renderCalView(m, stats, totalDays, firstDay, hasCarry) {
       </div>
       <div class="stats-footer">${footer}</div>
     </div>`;
-}
 
-function renderCloseModal(m, stats) {
-  const hasExtra = stats.extra > 0;
-  const carryOpt = hasExtra ? `
-    <div class="carry-option ${state.carryOver ? "active" : ""}" onclick="toggleCarry()">
-      <div class="checkbox ${state.carryOver ? "checked" : ""}">✓</div>
-      <div>
-        <div class="carry-title">Arrastrar noches al siguiente mes</div>
-        <div class="carry-desc">Las ${stats.extra} noche${stats.extra > 1 ? "s" : ""} extra no se cobran ahora y se suman al mes que viene.</div>
-      </div>
-    </div>` : "";
-  return `
-    <div class="modal-overlay" onclick="closeModalOutside(event)">
-      <div class="modal-box">
-        <p class="modal-title">Cerrar ${monthName(m.year, m.month)}</p>
-        <p class="modal-desc">${stats.extra === 0 ? "El balance está equilibrado este mes." : `Hay <strong>${stats.extra} noche${stats.extra > 1 ? "s" : ""} extra</strong> a favor de ${stats.creditor}.`}</p>
-        ${carryOpt}
-        <div class="modal-btns">
-          <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-          <button class="btn-confirm" onclick="confirmClose()">${state.carryOver ? "Cerrar y arrastrar" : "Cerrar mes"}</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-function renderReopenModal(m) {
-  return `
-    <div class="modal-overlay" onclick="closeReopenOutside(event)">
-      <div class="modal-box">
-        <p class="modal-title">Reabrir ${monthName(m.year, m.month)}</p>
-        <p class="modal-desc">¿Segura que quieres reabrir este mes? Podrás editar las noches y el balance cambiará. Tendrás que volver a cerrarlo cuando termines.</p>
-        <div class="modal-btns">
-          <button class="btn-cancel" onclick="closeReopenModal()">Cancelar</button>
-          <button class="btn-confirm" style="background:#C07A3A" onclick="confirmReopen()">Sí, reabrir</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-function renderHistView() {
-  const closed = state.months.filter(m => m.closed);
-  if (closed.length === 0) return `<p class="empty-msg">Aún no hay meses cerrados.</p>`;
-  return `<div class="history-list">${state.months.map((m, i) => {
-    if (!m.closed) return "";
-    const s = calcStats(m);
-    const hc = m.carried && (m.carried.Tlaxcala > 0 || m.carried.Tepoz > 0);
-    const label = s.diff === 0 ? "Equilibrado" : s.diff > 0 ? `Tepoz debe $${s.cost.toLocaleString("es-MX")}` : `Tlaxcala debe $${s.cost.toLocaleString("es-MX")}`;
-    return `
-      <div class="history-item" onclick="goToMonth(${i})">
+  const histView = (() => {
+    const closed = state.months.filter(mo => mo.closed);
+    if (!closed.length) return `<p class="empty-msg">Aún no hay meses cerrados.</p>`;
+    return `<div class="history-list">${state.months.map((mo, i) => {
+      if (!mo.closed) return "";
+      const s = calcStats(mo);
+      const hc = (mo.carried?.Tlaxcala||0)+(mo.carried?.Tepoz||0) > 0;
+      const label = s.diff === 0 ? "Equilibrado" : s.diff > 0 ? `Tepoz debe $${s.cost.toLocaleString("es-MX")}` : `Tlaxcala debe $${s.cost.toLocaleString("es-MX")}`;
+      return `<div class="history-item" onclick="setMo(${i});setView('calendar')">
         <div>
-          <div class="history-month">${monthName(m.year, m.month)}${hc ? `<span class="history-carry">↩</span>` : ""}</div>
+          <div class="history-month">${mName(mo.year, mo.month)}${hc ? `<span class="history-carry">↩</span>` : ""}</div>
           <div class="history-nights">Tlaxcala: ${s.tlax}n · Tepoz: ${s.tepoz}n</div>
         </div>
         <div class="history-amount" style="color:${s.diff === 0 ? "#27AE60" : "#C0392B"}">${label}</div>
       </div>`;
-  }).join("")}</div>`;
+    }).join("")}</div>`;
+  })();
+
+  const rTlax = raw.tlax + cTlax;
+  const rTepoz = raw.tepoz + cTepoz;
+  const closeModal = state.showClose ? `
+    <div class="modal-overlay" onclick="if(event.target===this)closeClose()">
+      <div class="modal-box">
+        <p class="modal-title">Cerrar ${mName(m.year, m.month)}</p>
+        <p class="modal-desc">Este mes: <strong style="color:#4A7C59">Tlaxcala ${rTlax}n</strong> · <strong style="color:#C07A3A">Tepoz ${rTepoz}n</strong></p>
+        <p style="font-size:13px;color:#666;margin-bottom:0.75rem">¿Quieres arrastrar noches al mes siguiente?</p>
+        ${rTlax > 0 ? `<div class="carry-opt ${state.carry.Tlaxcala ? "on" : ""}" onclick="toggleCarry('Tlaxcala')">
+          <div class="chk ${state.carry.Tlaxcala ? "on" : ""}">✓</div>
+          <div><div class="carry-title">Arrastrar ${rTlax} noche${rTlax > 1 ? "s" : ""} de Tlaxcala</div>
+          <div class="carry-desc">Se suman al conteo de Tlaxcala el mes que viene</div></div>
+        </div>` : ""}
+        ${rTepoz > 0 ? `<div class="carry-opt ${state.carry.Tepoz ? "on" : ""}" onclick="toggleCarry('Tepoz')">
+          <div class="chk ${state.carry.Tepoz ? "on" : ""}">✓</div>
+          <div><div class="carry-title">Arrastrar ${rTepoz} noche${rTepoz > 1 ? "s" : ""} de Tepoz</div>
+          <div class="carry-desc">Se suman al conteo de Tepoz el mes que viene</div></div>
+        </div>` : ""}
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeClose()">Cancelar</button>
+          <button class="btn-confirm" onclick="confirmClose()">${state.carry.Tlaxcala || state.carry.Tepoz ? "Cerrar y arrastrar" : "Cerrar mes"}</button>
+        </div>
+      </div>
+    </div>` : "";
+
+  const reopenModal = state.showReopen ? `
+    <div class="modal-overlay" onclick="if(event.target===this)closeReopen()">
+      <div class="modal-box">
+        <p class="modal-title">Reabrir ${mName(m.year, m.month)}</p>
+        <p class="modal-desc">¿Segura que quieres reabrir este mes? Podrás editar las noches y el balance cambiará.</p>
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeReopen()">Cancelar</button>
+          <button class="btn-confirm" style="background:#C07A3A" onclick="confirmReopen()">Sí, reabrir</button>
+        </div>
+      </div>
+    </div>` : "";
+
+  document.getElementById("root").innerHTML = `
+    <div class="pt">
+      <h1>Casa Tlaxcala ↔ Tepoz</h1>
+      <p class="sub">Cronograma de noches y balance mensual</p>
+      <div class="nav">
+        <button class="${state.view === "calendar" ? "active" : ""}" onclick="setView('calendar')">Calendario</button>
+        <button class="${state.view === "history" ? "active" : ""}" onclick="setView('history')">Historial</button>
+        <button class="btn-new" onclick="addMonth()">+ Mes</button>
+      </div>
+      ${state.view === "calendar" ? calView : histView}
+      ${closeModal}${reopenModal}
+    </div>`;
 }
 
 window.setView = v => { state.view = v; render(); };
-window.setActiveMonth = i => { state.activeIdx = i; state.view = "calendar"; render(); };
-window.selectHouse = h => { state.selectedHouse = h; render(); };
+window.setMo = i => { state.activeIdx = i; state.view = "calendar"; render(); };
+window.setSel = h => { state.sel = h; render(); };
 window.toggleDay = d => {
   const m = state.months[state.activeIdx];
   if (m.closed) return;
   if (!m.days) m.days = {};
-  if (m.days[d] === state.selectedHouse) delete m.days[d]; else m.days[d] = state.selectedHouse;
-  saveToFirebase(); render();
+  const cur = m.days[d] || null;
+  const next = nextDayState(cur, state.sel);
+  if (!next) delete m.days[d]; else m.days[d] = next;
+  save(); render();
 };
-window.setPrice = v => { state.months[state.activeIdx].pricePerNight = Number(v); saveToFirebase(); render(); };
-window.openCloseModal = () => { state.showModal = true; state.carryOver = false; render(); };
-window.closeModal = () => { state.showModal = false; state.carryOver = false; render(); };
-window.closeModalOutside = e => { if (e.target === e.currentTarget) { state.showModal = false; state.carryOver = false; render(); } };
-window.toggleCarry = () => { state.carryOver = !state.carryOver; render(); };
-window.openReopenModal = () => { state.showReopenModal = true; render(); };
-window.closeReopenModal = () => { state.showReopenModal = false; render(); };
-window.closeReopenOutside = e => { if (e.target === e.currentTarget) { state.showReopenModal = false; render(); } };
-window.goToMonth = i => { state.activeIdx = i; state.view = "calendar"; render(); };
-window.confirmReopen = () => {
-  state.months[state.activeIdx].closed = false;
-  state.showReopenModal = false;
-  saveToFirebase(); render();
-};
+window.setPrice = v => { state.months[state.activeIdx].pricePerNight = Number(v); save(); render(); };
+window.openClose = () => { state.carry = { Tlaxcala: false, Tepoz: false }; state.showClose = true; render(); };
+window.closeClose = () => { state.showClose = false; render(); };
+window.toggleCarry = h => { state.carry[h] = !state.carry[h]; render(); };
+window.openReopen = () => { state.showReopen = true; render(); };
+window.closeReopen = () => { state.showReopen = false; render(); };
 window.addMonth = () => {
   const last = state.months[state.months.length - 1];
   let y = last.year, mo = last.month + 1;
@@ -384,19 +394,18 @@ window.addMonth = () => {
   state.months.push(initMonth(y, mo));
   state.activeIdx = state.months.length - 1;
   state.view = "calendar";
-  saveToFirebase(); render();
+  save(); render();
 };
 window.confirmClose = () => {
   const m = state.months[state.activeIdx];
-  const s = calcStats(m);
+  const raw = rawCounts(m);
+  const cTlax = m.carried?.Tlaxcala || 0;
+  const cTepoz = m.carried?.Tepoz || 0;
   m.closed = true;
-  let nextCarried = { Tlaxcala: 0, Tepoz: 0 };
-  if (state.carryOver && s.diff !== 0) {
-    // Si Tepoz tuvo más noches en Tlaxcala (diff > 0), el arrastre le da noches gratis a Tepoz en Tlaxcala
-    // O sea suma a la casa CONTRARIA (la que tuvo menos)
-    if (s.diff > 0) nextCarried = { Tlaxcala: 0, Tepoz: Math.abs(s.diff) };
-    else nextCarried = { Tlaxcala: Math.abs(s.diff), Tepoz: 0 };
-  }
+  const nextCarried = {
+    Tlaxcala: state.carry.Tlaxcala ? raw.tlax + cTlax : 0,
+    Tepoz:    state.carry.Tepoz    ? raw.tepoz + cTepoz : 0,
+  };
   const isLast = state.activeIdx === state.months.length - 1;
   if (isLast) {
     const last = state.months[state.months.length - 1];
@@ -404,16 +413,19 @@ window.confirmClose = () => {
     if (mo > 11) { mo = 0; y++; }
     state.months.push(initMonth(y, mo, nextCarried));
     state.activeIdx = state.months.length - 1;
-  } else if (state.carryOver) {
+  } else {
     state.months[state.activeIdx + 1].carried = nextCarried;
   }
-  state.showModal = false; state.carryOver = false;
-  saveToFirebase(); render();
+  state.showClose = false;
+  save(); render();
+};
+window.confirmReopen = () => {
+  state.months[state.activeIdx].closed = false;
+  state.showReopen = false;
+  save(); render();
 };
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");
 </script>
 </body>
 </html>
