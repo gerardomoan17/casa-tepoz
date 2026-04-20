@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Casas" />
+  <meta name="theme-color" content="#4A7C59" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Casa Tlaxcala ↔ Tepoz</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      min-height: 100dvh;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    #root { max-width: 480px; margin: 0 auto; padding: 1.25rem 1rem 5rem; }
+
+    h1 { font-size: 17px; font-weight: 600; margin-bottom: 2px; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 1.25rem; }
+
+    .nav { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .nav button { flex: 1; padding: 8px; font-size: 13px; border-radius: 10px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #444; }
+    .nav button.active { background: #f0f0f0; font-weight: 600; border-color: #aaa; color: #111; }
+    .nav .btn-new { flex: 0 0 auto; padding: 8px 14px; font-size: 13px; border-radius: 10px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
+
+    .month-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .month-tabs button { padding: 4px 12px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #444; }
+    .month-tabs button.active { background: #f0f0f0; font-weight: 600; border-color: #999; color: #111; }
+
+    .month-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .month-header span { font-size: 15px; font-weight: 600; text-transform: capitalize; }
+    .badge-closed { font-size: 12px; color: #27AE60; border: 1px solid #27AE60; padding: 3px 10px; border-radius: 8px; }
+    .btn-close-month { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
+
+    .carry-notice { display: flex; gap: 10px; margin-bottom: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: #EBF4FF; border: 1px solid #B3D4F5; font-size: 13px; color: #1A6DB5; }
+
+    .legend { display: flex; gap: 16px; margin-bottom: 0.75rem; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 1.25rem; }
+    .cal-day-label { text-align: center; font-size: 11px; color: #aaa; padding: 2px 0; }
+    .cal-day {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; border-radius: 8px; border: 1px solid #e5e5e5;
+      background: transparent; color: #1a1a1a; cursor: pointer; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cal-day.tlaxcala { background: #4A7C59; border-color: #4A7C59; color: #fff; font-weight: 600; }
+    .cal-day.tepoz    { background: #C07A3A; border-color: #C07A3A; color: #fff; font-weight: 600; }
+    .cal-day.empty    { border: none; cursor: default; }
+    .cal-day.disabled { cursor: default; }
+
+    .house-selector { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .house-selector span { font-size: 13px; color: #666; }
+    .house-btn { padding: 7px 16px; font-size: 13px; border-radius: 10px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
+    .house-btn.tlaxcala { border-color: #4A7C59; background: #E8F5EE; color: #4A7C59; font-weight: 600; }
+    .house-btn.tepoz    { border-color: #C07A3A; background: #FBF0E6; color: #C07A3A; font-weight: 600; }
+
+    .price-row { display: flex; align-items: center; gap: 10px; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid #e5e5e5; background: #fafafa; margin-bottom: 1.25rem; }
+    .price-row span { font-size: 13px; color: #666; }
+    .price-row input { width: 90px; font-size: 14px; font-weight: 600; text-align: right; border: 1px solid #ddd; border-radius: 8px; padding: 4px 8px; background: #fff; color: #1a1a1a; }
+    .price-row .flex1 { flex: 1; }
+
+    .stats-box { border-radius: 12px; border: 1px solid #e5e5e5; overflow: hidden; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid #e5e5e5; }
+    .stat-cell { padding: 0.75rem 0.5rem; text-align: center; border-right: 1px solid #e5e5e5; }
+    .stat-cell:last-child { border-right: none; }
+    .stat-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .stat-val { font-size: 22px; font-weight: 600; }
+    .stat-sub { font-size: 10px; color: #bbb; margin-top: 2px; }
+    .stats-footer { padding: 0.85rem 1.1rem; background: #fafafa; }
+    .balanced { font-size: 14px; font-weight: 600; color: #27AE60; }
+    .debt-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .debt-label { font-size: 13px; color: #666; }
+    .debt-detail { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .debt-amount { font-size: 22px; font-weight: 600; color: #C0392B; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
+    .modal-box { background: #fff; border-radius: 20px 20px 0 0; padding: 1.5rem 1.25rem 2.5rem; width: 100%; max-width: 480px; }
+    .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .modal-desc { font-size: 13px; color: #666; margin-bottom: 1.25rem; }
+    .carry-option {
+      display: flex; align-items: flex-start; gap: 12px; padding: 0.85rem 1rem;
+      border-radius: 10px; border: 1.5px solid #ddd; background: #fafafa;
+      cursor: pointer; margin-bottom: 1.25rem;
+    }
+    .carry-option.active { border-color: #4A7C59; background: #E8F5EE; }
+    .checkbox { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid #ccc; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .checkbox.checked { background: #4A7C59; border-color: #4A7C59; color: #fff; }
+    .carry-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .carry-desc { font-size: 12px; color: #777; }
+    .modal-btns { display: flex; gap: 8px; }
+    .btn-cancel { flex: 1; padding: 12px; font-size: 14px; border-radius: 12px; border: 1px solid #ddd; background: transparent; cursor: pointer; color: #666; }
+    .btn-confirm { flex: 2; padding: 12px; font-size: 14px; font-weight: 600; border-radius: 12px; border: none; background: #4A7C59; color: #fff; cursor: pointer; }
+
+    /* History */
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-item { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid #e5e5e5; cursor: pointer; gap: 8px; }
+    .history-month { font-size: 14px; font-weight: 600; text-transform: capitalize; }
+    .history-nights { font-size: 12px; color: #888; margin-top: 2px; }
+    .history-carry { font-size: 11px; color: #1A6DB5; margin-left: 6px; }
+    .history-amount { font-size: 13px; font-weight: 600; text-align: right; }
+    .empty-msg { font-size: 14px; color: #888; padding: 2rem 0; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+const HOUSE_COLORS = { Tlaxcala: "#4A7C59", Tepoz: "#C07A3A" };
+
+function monthName(y, m) {
+  return new Date(y, m, 1).toLocaleString("es-MX", { month: "long", year: "numeric" });
+}
+function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function firstDayOfMonth(y, m) { const d = new Date(y, m, 1).getDay(); return d === 0 ? 6 : d - 1; }
+
+function initMonth(y, m, carried) {
+  return { year: y, month: m, days: {}, pricePerNight: 500, closed: false, carried: carried || { Tlaxcala: 0, Tepoz: 0 } };
+}
+
+function calcStats(month) {
+  let tlax = 0, tepoz = 0;
+  Object.values(month.days).forEach(h => { if (h === "Tlaxcala") tlax++; else tepoz++; });
+  tlax += (month.carried?.Tlaxcala || 0);
+  tepoz += (month.carried?.Tepoz || 0);
+  const diff = tlax - tepoz;
+  const extra = Math.abs(diff);
+  const cost = extra * month.pricePerNight;
+  let debtor = null, creditor = null;
+  if (diff > 0) { debtor = "huésped Tepoz"; creditor = "Casa Tlaxcala"; }
+  else if (diff < 0) { debtor = "huésped Tlaxcala"; creditor = "Casa Tepoz"; }
+  return { tlax, tepoz, diff, extra, cost, debtor, creditor };
+}
+
+const now = new Date();
+let state = {
+  months: [initMonth(now.getFullYear(), now.getMonth())],
+  activeIdx: 0,
+  view: "calendar",
+  selectedHouse: "Tlaxcala",
+  showModal: false,
+  carryOver: false
+};
+
+function save() {
+  try { localStorage.setItem("casas-data", JSON.stringify({ months: state.months })); } catch(e) {}
+}
+function load() {
+  try {
+    const d = localStorage.getItem("casas-data");
+    if (d) { const p = JSON.parse(d); state.months = p.months; }
+  } catch(e) {}
+}
+
+function render() {
+  const root = document.getElementById("root");
+  const m = state.months[state.activeIdx];
+  const stats = calcStats(m);
+  const totalDays = daysInMonth(m.year, m.month);
+  const firstDay = firstDayOfMonth(m.year, m.month);
+  const hasCarry = m.carried && (m.carried.Tlaxcala > 0 || m.carried.Tepoz > 0);
+
+  root.innerHTML = `
+    <h1>Casa Tlaxcala ↔ Tepoz</h1>
+    <p class="subtitle">Cronograma de noches y balance mensual</p>
+
+    <div class="nav">
+      <button class="${state.view === "calendar" ? "active" : ""}" onclick="setView('calendar')">Calendario</button>
+      <button class="${state.view === "history" ? "active" : ""}" onclick="setView('history')">Historial</button>
+      <button class="btn-new" onclick="addMonth()">+ Mes</button>
+    </div>
+
+    ${state.view === "calendar" ? renderCalendarView(m, stats, totalDays, firstDay, hasCarry) : renderHistoryView()}
+
+    ${state.showModal ? renderModal(m, stats) : ""}
+  `;
+}
+
+function renderCalendarView(m, stats, totalDays, firstDay, hasCarry) {
+  const tabs = state.months.map((mo, i) => `
+    <button class="${i === state.activeIdx ? "active" : ""}" onclick="setActiveMonth(${i})">
+      ${new Date(mo.year, mo.month, 1).toLocaleString("es-MX", { month: "short", year: "2-digit" })}${mo.closed ? " ✓" : ""}
+    </button>`).join("");
+
+  let calCells = "";
+  for (let i = 0; i < firstDay; i++) calCells += `<div class="cal-day empty"></div>`;
+  for (let d = 1; d <= totalDays; d++) {
+    const house = m.days[d] || "";
+    const cls = house ? house.toLowerCase() : "";
+    const disabled = m.closed ? "disabled" : "";
+    calCells += `<div class="cal-day ${cls} ${disabled}" onclick="toggleDay(${d})">${d}</div>`;
+  }
+
+  const houseSelector = m.closed ? "" : `
+    <div class="house-selector">
+      <span>Registrar en:</span>
+      <button class="house-btn ${state.selectedHouse === "Tlaxcala" ? "tlaxcala" : ""}" onclick="selectHouse('Tlaxcala')">Casa Tlaxcala</button>
+      <button class="house-btn ${state.selectedHouse === "Tepoz" ? "tepoz" : ""}" onclick="selectHouse('Tepoz')">Casa Tepoz</button>
+    </div>`;
+
+  const closeBtn = m.closed
+    ? `<span class="badge-closed">Mes cerrado</span>`
+    : `<button class="btn-close-month" onclick="openModal()">Cerrar mes</button>`;
+
+  const carryNotice = hasCarry ? `
+    <div class="carry-notice">
+      <span>↩</span>
+      <span>Noches arrastradas: ${m.carried.Tlaxcala > 0 ? `<strong>Tlaxcala +${m.carried.Tlaxcala}</strong>` : ""}${m.carried.Tepoz > 0 ? `<strong>Tepoz +${m.carried.Tepoz}</strong>` : ""}</span>
+    </div>` : "";
+
+  const statsFooter = stats.extra === 0
+    ? `<p class="balanced">Balance equilibrado — sin cobro</p>`
+    : `<div class="debt-row">
+        <div>
+          <div class="debt-label">El ${stats.debtor} paga al ${stats.creditor}</div>
+          <div class="debt-detail">${stats.extra} noches × $${m.pricePerNight.toLocaleString("es-MX")}</div>
+        </div>
+        <div class="debt-amount">$${stats.cost.toLocaleString("es-MX")} MXN</div>
+       </div>`;
+
+  return `
+    <div class="month-tabs">${tabs}</div>
+    <div class="month-header">
+      <span>${monthName(m.year, m.month)}</span>
+      ${closeBtn}
+    </div>
+    ${carryNotice}
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4A7C59"></div>Casa Tlaxcala</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#C07A3A"></div>Casa Tepoz</div>
+    </div>
+    <div class="cal-grid">
+      ${["L","M","X","J","V","S","D"].map(d => `<div class="cal-day-label">${d}</div>`).join("")}
+      ${calCells}
+    </div>
+    ${houseSelector}
+    <div class="price-row">
+      <span class="flex1">Precio por noche extra</span>
+      <span>$</span>
+      <input type="number" value="${m.pricePerNight}" onchange="setPrice(this.value)" ${m.closed ? "disabled" : ""} />
+      <span>MXN</span>
+    </div>
+    <div class="stats-box">
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-label">Noches Tlaxcala</div>
+          <div class="stat-val" style="color:#4A7C59">${stats.tlax}</div>
+          ${hasCarry && m.carried.Tlaxcala > 0 ? `<div class="stat-sub">incl. arrastre</div>` : ""}
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Noches Tepoz</div>
+          <div class="stat-val" style="color:#C07A3A">${stats.tepoz}</div>
+          ${hasCarry && m.carried.Tepoz > 0 ? `<div class="stat-sub">incl. arrastre</div>` : ""}
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Noches extra</div>
+          <div class="stat-val" style="color:${stats.extra > 0 ? "#C0392B" : "#27AE60"}">${stats.extra}</div>
+        </div>
+      </div>
+      <div class="stats-footer">${statsFooter}</div>
+    </div>`;
+}
+
+function renderModal(m, stats) {
+  const hasExtra = stats.extra > 0;
+  const carryOption = hasExtra ? `
+    <div class="carry-option ${state.carryOver ? "active" : ""}" onclick="toggleCarry()">
+      <div class="checkbox ${state.carryOver ? "checked" : ""}">✓</div>
+      <div>
+        <div class="carry-title">Arrastrar noches al siguiente mes</div>
+        <div class="carry-desc">Las ${stats.extra} noche${stats.extra > 1 ? "s" : ""} extra no se cobran ahora y se suman al mes que viene.</div>
+      </div>
+    </div>` : "";
+
+  return `
+    <div class="modal-overlay" onclick="closeModalOutside(event)">
+      <div class="modal-box">
+        <p class="modal-title">Cerrar ${monthName(m.year, m.month)}</p>
+        <p class="modal-desc">${stats.extra === 0 ? "El balance está equilibrado este mes." : `Hay <strong>${stats.extra} noche${stats.extra > 1 ? "s" : ""} extra</strong> a favor de ${stats.creditor}.`}</p>
+        ${carryOption}
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+          <button class="btn-confirm" onclick="confirmClose()">${state.carryOver ? "Cerrar y arrastrar" : "Cerrar mes"}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderHistoryView() {
+  const closed = state.months.filter(m => m.closed);
+  if (closed.length === 0) return `<p class="empty-msg">Aún no hay meses cerrados.</p>`;
+  const items = state.months.map((m, i) => {
+    if (!m.closed) return "";
+    const s = calcStats(m);
+    const hasCarry = m.carried && (m.carried.Tlaxcala > 0 || m.carried.Tepoz > 0);
+    const label = s.diff === 0 ? "Equilibrado" : s.diff > 0 ? `Tepoz debe $${s.cost.toLocaleString("es-MX")}` : `Tlaxcala debe $${s.cost.toLocaleString("es-MX")}`;
+    const color = s.diff === 0 ? "#27AE60" : "#C0392B";
+    return `
+      <div class="history-item" onclick="goToMonth(${i})">
+        <div>
+          <div class="history-month">${monthName(m.year, m.month)}${hasCarry ? `<span class="history-carry">↩</span>` : ""}</div>
+          <div class="history-nights">Tlaxcala: ${s.tlax}n · Tepoz: ${s.tepoz}n</div>
+        </div>
+        <div class="history-amount" style="color:${color}">${label}</div>
+      </div>`;
+  }).join("");
+  return `<div class="history-list">${items}</div>`;
+}
+
+// Actions
+window.setView = v => { state.view = v; render(); };
+window.setActiveMonth = i => { state.activeIdx = i; state.view = "calendar"; render(); };
+window.selectHouse = h => { state.selectedHouse = h; render(); };
+window.toggleDay = d => {
+  const m = state.months[state.activeIdx];
+  if (m.closed) return;
+  const cur = m.days[d];
+  if (cur === state.selectedHouse) delete m.days[d]; else m.days[d] = state.selectedHouse;
+  save(); render();
+};
+window.setPrice = v => { state.months[state.activeIdx].pricePerNight = Number(v); save(); render(); };
+window.openModal = () => { state.showModal = true; state.carryOver = false; render(); };
+window.closeModal = () => { state.showModal = false; state.carryOver = false; render(); };
+window.closeModalOutside = e => { if (e.target === e.currentTarget) closeModal(); };
+window.toggleCarry = () => { state.carryOver = !state.carryOver; render(); };
+window.goToMonth = i => { state.activeIdx = i; state.view = "calendar"; render(); };
+
+window.confirmClose = () => {
+  const m = state.months[state.activeIdx];
+  const s = calcStats(m);
+  m.closed = true;
+
+  let nextCarried = { Tlaxcala: 0, Tepoz: 0 };
+  if (state.carryOver && s.diff !== 0) {
+    if (s.diff > 0) nextCarried = { Tlaxcala: Math.abs(s.diff), Tepoz: 0 };
+    else nextCarried = { Tlaxcala: 0, Tepoz: Math.abs(s.diff) };
+  }
+
+  const isLast = state.activeIdx === state.months.length - 1;
+  if (isLast) {
+    const last = state.months[state.months.length - 1];
+    let y = last.year, mo = last.month + 1;
+    if (mo > 11) { mo = 0; y++; }
+    state.months.push(initMonth(y, mo, nextCarried));
+    state.activeIdx = state.months.length - 1;
+  } else if (state.carryOver) {
+    state.months[state.activeIdx + 1].carried = nextCarried;
+  }
+
+  state.showModal = false;
+  state.carryOver = false;
+  save(); render();
+};
+
+window.addMonth = () => {
+  const last = state.months[state.months.length - 1];
+  let y = last.year, mo = last.month + 1;
+  if (mo > 11) { mo = 0; y++; }
+  state.months.push(initMonth(y, mo));
+  state.activeIdx = state.months.length - 1;
+  state.view = "calendar";
+  save(); render();
+};
+
+// Service worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+
+load();
+render();
+</script>
+</body>
+</html>
