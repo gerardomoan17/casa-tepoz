@@ -90,6 +90,7 @@
     .history-amount { font-size: 13px; font-weight: 600; text-align: right; }
     .empty-msg { font-size: 14px; color: #888; padding: 2rem 0; }
     .loading { text-align: center; padding: 3rem 0; color: #888; font-size: 14px; }
+    .btn-reopen { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid #C07A3A; background: transparent; cursor: pointer; color: #C07A3A; }
   </style>
 </head>
 <body>
@@ -147,6 +148,7 @@ let state = {
   selectedHouse: "Tlaxcala",
   showModal: false,
   carryOver: false,
+  showReopenModal: false,
   loaded: false
 };
 
@@ -195,6 +197,7 @@ function render() {
       </div>
       ${state.view === "calendar" ? renderCalView(m, stats, totalDays, firstDay, hasCarry) : renderHistView()}
       ${state.showModal ? renderModal(m, stats) : ""}
+      ${state.showReopenModal ? renderReopenModal(m) : ""}
     </div>`;
 }
 
@@ -221,7 +224,7 @@ function renderCalView(m, stats, totalDays, firstDay, hasCarry) {
     </div>`;
 
   const closeBtn = m.closed
-    ? `<span class="badge-closed">Mes cerrado</span>`
+    ? `<div style="display:flex;gap:8px;align-items:center"><span class="badge-closed">Mes cerrado</span><button class="btn-reopen" onclick="openReopenModal()">Reabrir</button></div>`
     : `<button class="btn-close-month" onclick="openModal()">Cerrar mes</button>`;
 
   const carryNotice = hasCarry ? `
@@ -303,7 +306,21 @@ function renderModal(m, stats) {
     </div>`;
 }
 
-function renderHistView() {
+function renderReopenModal(m) {
+  return `
+    <div class="modal-overlay" onclick="closeReopenModalOutside(event)">
+      <div class="modal-box">
+        <p class="modal-title">Reabrir ${monthName(m.year, m.month)}</p>
+        <p class="modal-desc">¿Segura que quieres reabrir este mes? Podrás editar las noches y el balance cambiará. Tendrás que volver a cerrarlo cuando termines.</p>
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeReopenModal()">Cancelar</button>
+          <button class="btn-confirm" style="background:#C07A3A" onclick="confirmReopen()">Sí, reabrir</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+
   const closed = state.months.filter(m => m.closed);
   if (closed.length === 0) return `<p class="empty-msg">Aún no hay meses cerrados.</p>`;
   return `<div class="history-list">${state.months.map((m, i) => {
@@ -368,6 +385,15 @@ window.confirmClose = () => {
     state.months[state.activeIdx + 1].carried = nextCarried;
   }
   state.showModal = false; state.carryOver = false;
+  saveToFirebase(); render();
+};
+
+window.openReopenModal = () => { state.showReopenModal = true; render(); };
+window.closeReopenModal = () => { state.showReopenModal = false; render(); };
+window.closeReopenModalOutside = e => { if (e.target === e.currentTarget) closeReopenModal(); };
+window.confirmReopen = () => {
+  state.months[state.activeIdx].closed = false;
+  state.showReopenModal = false;
   saveToFirebase(); render();
 };
 
