@@ -19,7 +19,7 @@
     #root { max-width: 480px; margin: 0 auto; padding: 1.25rem 1rem 5rem; }
     #sync-bar { position: fixed; top: 0; left: 0; right: 0; padding: 6px 16px; font-size: 12px; text-align: center; z-index: 200; transition: all 0.3s; }
     #sync-bar.syncing { background: #FFF8E1; color: #B8860B; }
-    #sync-bar.synced  { background: #E8F5EEF; color: #2E7D32; }
+    #sync-bar.synced  { background: #E8F5EE; color: #2E7D32; }
     #sync-bar.error   { background: #FFEBEE; color: #C62828; }
     #sync-bar.hidden  { display: none; }
     .pt { padding-top: 2rem; }
@@ -165,12 +165,25 @@ function saveToFirebase() {
     .catch(() => showSync("error", "Error al sincronizar"));
 }
 
+const timeout = setTimeout(() => {
+  if (!state.loaded) {
+    state.loaded = true;
+    render();
+  }
+}, 5000);
+
 onValue(dataRef, (snapshot) => {
+  clearTimeout(timeout);
   const data = snapshot.val();
   if (data && data.months && data.months.length > 0) {
     state.months = data.months;
     if (state.activeIdx >= state.months.length) state.activeIdx = state.months.length - 1;
   }
+  state.loaded = true;
+  render();
+}, (error) => {
+  clearTimeout(timeout);
+  console.error("Firebase error:", error);
   state.loaded = true;
   render();
 });
@@ -286,4 +299,119 @@ function renderCalView(m, stats, totalDays, firstDay, hasCarry) {
 function renderCloseModal(m, stats) {
   const hasExtra = stats.extra > 0;
   const carryOpt = hasExtra ? `
-    <div class="carry-option ${state.carryOver ? "active" : ""}" onclick=
+    <div class="carry-option ${state.carryOver ? "active" : ""}" onclick="toggleCarry()">
+      <div class="checkbox ${state.carryOver ? "checked" : ""}">✓</div>
+      <div>
+        <div class="carry-title">Arrastrar noches al siguiente mes</div>
+        <div class="carry-desc">Las ${stats.extra} noche${stats.extra > 1 ? "s" : ""} extra no se cobran ahora y se suman al mes que viene.</div>
+      </div>
+    </div>` : "";
+  return `
+    <div class="modal-overlay" onclick="closeModalOutside(event)">
+      <div class="modal-box">
+        <p class="modal-title">Cerrar ${monthName(m.year, m.month)}</p>
+        <p class="modal-desc">${stats.extra === 0 ? "El balance está equilibrado este mes." : `Hay <strong>${stats.extra} noche${stats.extra > 1 ? "s" : ""} extra</strong> a favor de ${stats.creditor}.`}</p>
+        ${carryOpt}
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+          <button class="btn-confirm" onclick="confirmClose()">${state.carryOver ? "Cerrar y arrastrar" : "Cerrar mes"}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderReopenModal(m) {
+  return `
+    <div class="modal-overlay" onclick="closeReopenOutside(event)">
+      <div class="modal-box">
+        <p class="modal-title">Reabrir ${monthName(m.year, m.month)}</p>
+        <p class="modal-desc">¿Segura que quieres reabrir este mes? Podrás editar las noches y el balance cambiará. Tendrás que volver a cerrarlo cuando termines.</p>
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeReopenModal()">Cancelar</button>
+          <button class="btn-confirm" style="background:#C07A3A" onclick="confirmReopen()">Sí, reabrir</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderHistView() {
+  const closed = state.months.filter(m => m.closed);
+  if (closed.length === 0) return `<p class="empty-msg">Aún no hay meses cerrados.</p>`;
+  return `<div class="history-list">${state.months.map((m, i) => {
+    if (!m.closed) return "";
+    const s = calcStats(m);
+    const hc = m.carried && (m.carried.Tlaxcala > 0 || m.carried.Tepoz > 0);
+    const label = s.diff === 0 ? "Equilibrado" : s.diff > 0 ? `Tepoz debe $${s.cost.toLocaleString("es-MX")}` : `Tlaxcala debe $${s.cost.toLocaleString("es-MX")}`;
+    return `
+      <div class="history-item" onclick="goToMonth(${i})">
+        <div>
+          <div class="history-month">${monthName(m.year, m.month)}${hc ? `<span class="history-carry">↩</span>` : ""}</div>
+          <div class="history-nights">Tlaxcala: ${s.tlax}n · Tepoz: ${s.tepoz}n</div>
+        </div>
+        <div class="history-amount" style="color:${s.diff === 0 ? "#27AE60" : "#C0392B"}">${label}</div>
+      </div>`;
+  }).join("")}</div>`;
+}
+
+window.setView = v => { state.view = v; render(); };
+window.setActiveMonth = i => { state.activeIdx = i; state.view = "calendar"; render(); };
+window.selectHouse = h => { state.selectedHouse = h; render(); };
+window.toggleDay = d => {
+  const m = state.months[state.activeIdx];
+  if (m.closed) return;
+  if (!m.days) m.days = {};
+  if (m.days[d] === state.selectedHouse) delete m.days[d]; else m.days[d] = state.selectedHouse;
+  saveToFirebase(); render();
+};
+window.setPrice = v => { state.months[state.activeIdx].pricePerNight = Number(v); saveToFirebase(); render(); };
+window.openCloseModal = () => { state.showModal = true; state.carryOver = false; render(); };
+window.closeModal = () => { state.showModal = false; state.carryOver = false; render(); };
+window.closeModalOutside = e => { if (e.target === e.currentTarget) { state.showModal = false; state.carryOver = false; render(); } };
+window.toggleCarry = () => { state.carryOver = !state.carryOver; render(); };
+window.openReopenModal = () => { state.showReopenModal = true; render(); };
+window.closeReopenModal = () => { state.showReopenModal = false; render(); };
+window.closeReopenOutside = e => { if (e.target === e.currentTarget) { state.showReopenModal = false; render(); } };
+window.goToMonth = i => { state.activeIdx = i; state.view = "calendar"; render(); };
+window.confirmReopen = () => {
+  state.months[state.activeIdx].closed = false;
+  state.showReopenModal = false;
+  saveToFirebase(); render();
+};
+window.addMonth = () => {
+  const last = state.months[state.months.length - 1];
+  let y = last.year, mo = last.month + 1;
+  if (mo > 11) { mo = 0; y++; }
+  state.months.push(initMonth(y, mo));
+  state.activeIdx = state.months.length - 1;
+  state.view = "calendar";
+  saveToFirebase(); render();
+};
+window.confirmClose = () => {
+  const m = state.months[state.activeIdx];
+  const s = calcStats(m);
+  m.closed = true;
+  let nextCarried = { Tlaxcala: 0, Tepoz: 0 };
+  if (state.carryOver && s.diff !== 0) {
+    if (s.diff > 0) nextCarried = { Tlaxcala: Math.abs(s.diff), Tepoz: 0 };
+    else nextCarried = { Tlaxcala: 0, Tepoz: Math.abs(s.diff) };
+  }
+  const isLast = state.activeIdx === state.months.length - 1;
+  if (isLast) {
+    const last = state.months[state.months.length - 1];
+    let y = last.year, mo = last.month + 1;
+    if (mo > 11) { mo = 0; y++; }
+    state.months.push(initMonth(y, mo, nextCarried));
+    state.activeIdx = state.months.length - 1;
+  } else if (state.carryOver) {
+    state.months[state.activeIdx + 1].carried = nextCarried;
+  }
+  state.showModal = false; state.carryOver = false;
+  saveToFirebase(); render();
+};
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+</body>
+</html>
