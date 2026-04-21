@@ -327,12 +327,12 @@ function render() {
         <p class="modal-desc">Este mes: <strong style="color:#4A7C59">Tlaxcala ${rTlax}n</strong> · <strong style="color:#C07A3A">Tepoz ${rTepoz}n</strong></p>
         <p style="font-size:13px;color:#666;margin-bottom:0.75rem">¿Quieres arrastrar noches al mes siguiente?</p>
         ${rTlax > 0 ? `<div class="carry-opt ${state.carry.Tlaxcala ? "on" : ""}" onclick="toggleCarry('Tlaxcala')">
-          <div class="chk ${state.carry.Tlaxcala ? "on" : ""}">✓</div>
+          <div class="chk ${state.carry.Tlaxcala ? "on" : ""}">${state.carry.Tlaxcala ? "✓" : ""}</div>
           <div><div class="carry-title">Arrastrar ${rTlax} noche${rTlax > 1 ? "s" : ""} de Tlaxcala</div>
           <div class="carry-desc">Se suman al conteo de Tlaxcala el mes que viene</div></div>
         </div>` : ""}
         ${rTepoz > 0 ? `<div class="carry-opt ${state.carry.Tepoz ? "on" : ""}" onclick="toggleCarry('Tepoz')">
-          <div class="chk ${state.carry.Tepoz ? "on" : ""}">✓</div>
+          <div class="chk ${state.carry.Tepoz ? "on" : ""}">${state.carry.Tepoz ? "✓" : ""}</div>
           <div><div class="carry-title">Arrastrar ${rTepoz} noche${rTepoz > 1 ? "s" : ""} de Tepoz</div>
           <div class="carry-desc">Se suman al conteo de Tepoz el mes que viene</div></div>
         </div>` : ""}
