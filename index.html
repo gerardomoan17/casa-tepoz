@@ -397,29 +397,44 @@ window.addMonth = () => {
   save(); render();
 };
 window.confirmClose = () => {
-  const m = state.months[state.activeIdx];
+  const idx = state.activeIdx;
+  const m = state.months[idx];
   const raw = rawCounts(m);
   const cTlax = m.carried?.Tlaxcala || 0;
   const cTepoz = m.carried?.Tepoz || 0;
-  m.closed = true;
+
   const nextCarried = {
     Tlaxcala: state.carry.Tlaxcala ? raw.tlax + cTlax : 0,
     Tepoz:    state.carry.Tepoz    ? raw.tepoz + cTepoz : 0,
   };
-  const isLast = state.activeIdx === state.months.length - 1;
+
+  // Build the complete new months array first, then save once
+  const newMonths = state.months.map((mo, i) => {
+    if (i === idx) return { ...mo, closed: true };
+    if (i === idx + 1) return { ...mo, carried: { ...nextCarried } };
+    return mo;
+  });
+
+  const isLast = idx === state.months.length - 1;
   if (isLast) {
-    const last = state.months[state.months.length - 1];
+    const last = newMonths[newMonths.length - 1];
     let y = last.year, mo = last.month + 1;
     if (mo > 11) { mo = 0; y++; }
-    state.months.push(initMonth(y, mo, nextCarried));
-    state.activeIdx = state.months.length - 1;
-  } else {
-    // Always update next month's carried, whether it exists or not
-    state.months[state.activeIdx + 1].carried = nextCarried;
-    state.activeIdx = state.activeIdx + 1;
+    newMonths.push(initMonth(y, mo, { ...nextCarried }));
   }
+
+  // Update state all at once
+  state.months = newMonths;
+  state.activeIdx = isLast ? newMonths.length - 1 : idx + 1;
   state.showClose = false;
-  save(); render();
+
+  // Save the complete state to Firebase
+  showSync("syncing", "Sincronizando...");
+  set(dataRef, { months: state.months })
+    .then(() => showSync("synced", "Sincronizado ✓"))
+    .catch(() => showSync("error", "Error al sincronizar"));
+
+  render();
 };
 window.confirmReopen = () => {
   state.months[state.activeIdx].closed = false;
